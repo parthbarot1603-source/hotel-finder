@@ -1,0 +1,231 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Finder</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            padding: 0;
+            background: #eee;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .box {
+            width: 90%;
+            max-width: 750px;
+            margin: 20px auto;
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+        }
+
+        button {
+            background: #2c3e50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .hotel {
+            background: #f1f1f1;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 12px;
+        }
+
+        .hotel img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .bookBtn {
+            width: 100%;
+            padding: 10px;
+            background: green;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        .suggestions {
+            background: white;
+            border: 1px solid #bbb;
+            position: absolute;
+            width: calc(100% - 30px);
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+            border-radius: 4px;
+        }
+
+        .suggestions div {
+            padding: 10px;
+        }
+
+        .suggestions div:hover {
+            background: #ddd;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<header><h2>Hotel Finder</h2></header>
+
+<div class="box">
+
+    <input type="text" id="location" placeholder="Enter city" oninput="showSuggestions()" onclick="showSuggestions()">
+    <div class="suggestions" id="suggestionsBox"></div>
+
+    <select id="price">
+        <option value="all">Any Price</option>
+        <option value="low">Below ₹2000</option>
+        <option value="mid">₹2000 - ₹4000</option>
+        <option value="high">Above ₹4000</option>
+    </select>
+
+    <button onclick="searchHotels()">Search</button>
+
+    <div id="hotelList"></div>
+</div>
+
+<script>
+    const cities = ["Ahmedabad","Gandhinagar","Vadodara","Surat","Rajkot","Dwarka","Somnath","Kutch"];
+
+    const images = [
+        "C:/Users/barot/Downloads/pexels-pixabay-258154.jpg",
+        "C:/Users/barot/Downloads/pexels-pixabay-261102.jpg",
+        "C:/Users/barot/Downloads/pexels-amar-saleem-15661-70441.jpg",
+        "C:/Users/barot/Downloads/pexels-pixabay-260922.jpg",
+        "C:/Users/barot/Downloads/pexels-quark-studio-1159039-2506990.jpg",
+        "C:/Users/barot/Downloads/pexels-asadphoto-1268871.jpg",
+        "C:/Users/barot/Downloads/pexels-karlsolano-2883048.jpg",
+        "C:/Users/barot/Downloads/pexels-fox-58267-1082326.jpg",
+        "C:/Users/barot/Downloads/pexels-grizzlybear-528427.jpg"
+    ];
+
+    const hotels = [
+        { name: "City Stay", location: "Ahmedabad", price: 1500 },
+        { name: "Comfort Rooms", location: "Ahmedabad", price: 2200 },
+        { name: "River View", location: "Ahmedabad", price: 3000 },
+        { name: "Green Stay", location: "Gandhinagar", price: 1400 },
+        { name: "Metro Inn", location: "Gandhinagar", price: 2500 },
+        { name: "Classic Rooms", location: "Gandhinagar", price: 3200 },
+        { name: "Hotel Sunshine", location: "Vadodara", price: 1600 },
+        { name: "City Point", location: "Vadodara", price: 2300 },
+        { name: "Royal Stay", location: "Vadodara", price: 3500 },
+        { name: "Blue Star", location: "Surat", price: 1500 },
+        { name: "Hotel Pearl", location: "Surat", price: 2100 },
+        { name: "Surat Comfort", location: "Surat", price: 2800 },
+        { name: "Rajkot Inn", location: "Rajkot", price: 1300 },
+        { name: "Kings Hotel", location: "Rajkot", price: 2500 },
+        { name: "Lake View", location: "Rajkot", price: 3400 },
+        { name: "Hotel Shree", location: "Dwarka", price: 900 },
+        { name: "Sea View Stay", location: "Dwarka", price: 2000 },
+        { name: "Somnath Rooms", location: "Somnath", price: 1200 },
+        { name: "Temple Stay", location: "Somnath", price: 1500 },
+        { name: "Coastal Inn", location: "Somnath", price: 2100 },
+        { name: "Desert Stay", location: "Kutch", price: 1800 },
+        { name: "Kutch Comfort", location: "Kutch", price: 2600 },
+        { name: "White Desert Inn", location: "Kutch", price: 3500 }
+    ];
+
+    hotels.forEach((hotel, index) => {
+        hotel.img = images[index % images.length];
+    });
+
+    function showSuggestions() {
+        const value = document.getElementById("location").value.toLowerCase();
+        const box = document.getElementById("suggestionsBox");
+        box.innerHTML = "";
+
+        const list = cities.filter(c => c.toLowerCase().includes(value));
+
+        if (list.length === 0) {
+            box.style.display = "none";
+            return;
+        }
+
+        box.style.display = "block";
+
+        list.forEach(c => {
+            const div = document.createElement("div");
+            div.textContent = c;
+            div.onclick = () => {
+                document.getElementById("location").value = c;
+                box.style.display = "none";
+            };
+            box.appendChild(div);
+        });
+    }
+
+    document.addEventListener("click", e => {
+        if (!e.target.closest(".suggestions") && e.target.id !== "location") {
+            document.getElementById("suggestionsBox").style.display = "none";
+        }
+    });
+
+    function searchHotels() {
+        const loc = document.getElementById("location").value.toLowerCase();
+        const price = document.getElementById("price").value;
+        const listBox = document.getElementById("hotelList");
+        listBox.innerHTML = "";
+
+        const list = hotels.filter(h => {
+            const byLoc = h.location.toLowerCase().includes(loc);
+            let byPrice = true;
+
+            if (price === "low") byPrice = h.price < 2000;
+            if (price === "mid") byPrice = h.price >= 2000 && h.price <= 4000;
+            if (price === "high") byPrice = h.price > 4000;
+
+            return byLoc && byPrice;
+        });
+
+        if (list.length === 0) {
+            listBox.innerHTML = "<p>No hotels found</p>";
+            return;
+        }
+
+        list.forEach(h => {
+            listBox.innerHTML += `
+                <div class="hotel">
+                    <img src="${h.img}">
+                    <h3>${h.name}</h3>
+                    <p>Location: ${h.location}</p>
+                    <p>Price: ₹${h.price}</p>
+                    <button class="bookBtn" onclick="bookHotel('${h.name}', '${h.location}', ${h.price})">Book Now</button>
+                </div>
+            `;
+        });
+    }
+
+    function bookHotel(name, location, price) {
+        alert("Booking Successful!\nHotel: " + name + "\nLocation: " + location + "\nPrice: ₹" + price);
+    }
+</script>
+
+</body>
+</html>
